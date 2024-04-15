@@ -1,26 +1,25 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Button from "./components/Button"
 import Container from "./components/Container"
 import Input from "./components/Input"
 import Text from "./components/Text"
-import Box from "./components/Box"
 import Flexbox from "./components/Flexbox"
 import CompItem from "./components/CompItem"
 
 export interface CompItem {
   id:number,
   text:string,
-  percent:string,
+  percent:number,
   isCompleted: boolean
 }
 
 let arrData = [
-  {id:0, text:"need to create something", percent:"25", isCompleted:false},
-  {id:1, text:"yetagain", percent:"25", isCompleted:true}
+  {id:0, text:"need to create something", percent:25, isCompleted:false},
+  {id:1, text:"yetagain", percent:24, isCompleted:true}
 ];
 
-let filterAscLabel:string = "Asc/Desc";
-let filterPercentLabel = ">50/<50";
+let sortIcon:string = "./sort-def.svg";
+let filterPercentLabel:string = ">50/<50";
 
 function App() {
 
@@ -30,8 +29,10 @@ function App() {
   const [createCompText, setCreateCompText] = useState<string>("");
   const [createCompPercent, setCreateCompPercent] = useState<string>("");
 
-  const [filterAsc, setFilterAsc] = useState<number>(0); // 0-unassigned, 1-asc, 2-desc
-  const [filterPercent, setFilterPercent] = useState<number>(0); // 0-unassigned, 1-asc, 2-desc
+  const [sort, setSort] = useState<number>(0); // 0-unassigned, 1-asc, 2-desc
+  const sortIcons:string[] = ["./sort-def.svg", "./sort-ascending.svg", "./sort-descending.svg"];
+  const [filterPercent, setFilterPercent] = useState<number>(0); // 0-unassigned, 1->50, 2-<50
+  const fPercentLabels:string[]  = [">50/<50", ">50", "<50"]
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, state:(...args:any)=>void) => {
     e.preventDefault();
@@ -40,7 +41,8 @@ function App() {
 
   const addComp = (e: React.FormEvent) => {
     e.preventDefault();
-    setCompList(p => [...p, {id:compList.length, text:createCompText, percent:createCompPercent, isCompleted:false}])
+    arrData.push({id:compList.length, text:createCompText, percent:parseInt(createCompPercent), isCompleted:false})
+    setCompList(arrData);
     setCreateCompPercent("");
     setCreateCompText("");
   }
@@ -51,11 +53,11 @@ function App() {
     setCompList([...compsCopy])
   }
 
-  const changeButtonLabel = (actual:number, setState:any, max:number, labels:string[]):string => {
+  const strChange = (actual:number, setState:any, labels:string[]):string => {
     if(typeof(actual) !== "number" || typeof(actual) !== "number") return "";
     let index:number = actual;
 
-    if(actual < max) {
+    if(actual < labels.length - 1) {
       index+=1;
     }
     else {
@@ -64,6 +66,64 @@ function App() {
     setState(index)
     return(labels[index]);
   }
+
+  const dataSort = (data:CompItem[], type:string):CompItem[] => {
+    let dataCopy = [...data];
+    if(!type || type === "") return data;
+    if(!Array.isArray(data)) return data;
+
+    var i, j, temp;
+    var swapped;
+    const arrLen = data.length;
+
+    for (i = 0; i < arrLen - 1; i++) 
+    {
+        swapped = false;
+        for (j = 0; j < arrLen - i - 1; j++) 
+        {
+            if (type.toLocaleLowerCase() === "asc" 
+              ? dataCopy[j].percent > dataCopy[j + 1].percent 
+              : dataCopy[j].percent < dataCopy[j + 1].percent // :(
+            ) 
+            {
+                temp = dataCopy[j];
+                dataCopy[j] = dataCopy[j + 1];
+                dataCopy[j + 1] = temp;
+                swapped = true;
+            }
+        }
+
+        if (swapped == false)
+        break;
+    }
+    return dataCopy;
+  }
+
+  const handleFilter = () => {
+    switch(sort) {
+      case 1:
+        setCompList([...dataSort(compList, "asc")]); // Life is pain
+        break;
+      case 2:
+        setCompList([...dataSort(compList, "desc")]);
+        break;
+      default:
+        setCompList([...arrData])
+    }
+
+    switch(filterPercent) {
+      case 1:
+        setCompList(p => p.filter((i) => i.percent > 50))
+        break;
+      case 2:
+        setCompList(p => p.filter((i) => i.percent < 50))
+        break;
+    }
+  }
+  useEffect(()=>{
+    handleFilter();
+    console.log("filter")
+  },[filterPercent, sort])
 
   return (
     <>
@@ -97,12 +157,13 @@ function App() {
             <Flexbox className="flex-col gap-10">
               <Flexbox>
                 <Button
-                  onClick={()=>{filterAscLabel = changeButtonLabel(filterAsc, setFilterAsc, 2, ["Asc/Desc", "Asc", "Desc"])}}
-                >{filterAscLabel}</Button>
+                  onClick={()=>{sortIcon = strChange(sort, setSort, sortIcons)}}
+                  className="bg-accent flex-1 px-2 flex justify-center align-middle"
+                ><img src={sortIcon} className="min-w-5 min-h-5 translate-y-1"/></Button>
                 <Button
-                  onClick={()=>{filterPercentLabel = changeButtonLabel(filterPercent, setFilterPercent, 2, [">50/<50", ">50", "<50"])}}
+                  onClick={()=>{filterPercentLabel = strChange(filterPercent, setFilterPercent, fPercentLabels)}}
+                  className="bg-accent flex-1"
                 >{filterPercentLabel}</Button>
-                <Button className="bg-primary text-background"><Text text="Поиск"></Text></Button>
               </Flexbox>
               <Flexbox className="flex-col">
               {compList.map((i, index) => {
