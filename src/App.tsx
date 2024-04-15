@@ -1,41 +1,29 @@
-import { useState } from "react"
-import Button from "./components/Button"
 import Container from "./components/Container"
-import Input from "./components/Input"
+import Counter from "./components/Counter"
+import Flexbox from "./components/Flexbox"
 import Text from "./components/Text"
-
-interface CompItem {
-  id:number,
-  text:string,
-  percent:string,
-}
+import API from "./components/API"
+import WindowWidth from "./components/WindowWidth"
 
 function App() {
 
-  const [isCompVisible, setIsCompVisible] = useState<boolean>(false);
-  const [compList, setCompList] = useState<CompItem[]>([]);
-
-  const [fText, setFText] = useState<string>("");
-  const [fPercent, setFPercent] = useState<string>("");
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>, state:(...args:any)=>void) => {
-    e.preventDefault();
-    state(e.target.value);
-  }
-
-  const addComp = (e: React.FormEvent) => {
-    e.preventDefault();
-    compList.push({id:compList.length, text:fText, percent:fPercent})
-    setFPercent("");
-    setFText("");
-  }
-
   return (
-    <>
-      <Container maxW="md">
-          <Text text="Test" />
-      </Container>
-    </>
+    <Container maxW="md" className="px-10">
+        <Flexbox className="mx-2 flex-col">
+          <Flexbox className="mt-10 flex-col gap-4">
+            <Text text="Счетчик" size="md" className="font-bold"/>
+            <Counter/>
+          </Flexbox>
+          <Flexbox className="mt-10 flex-col gap-4">
+            <Text text="API" size="md" className="font-bold"/>
+            <API/>
+          </Flexbox>
+          <Flexbox className="mt-10 flex-col gap-4">
+            <Text text="Ширина окна" size="md" className="font-bold"/>
+            <WindowWidth/>
+          </Flexbox>
+        </Flexbox>
+    </Container>
   )
 }
 
